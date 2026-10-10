@@ -1,0 +1,1 @@
+uv run srtctl apply -f examples/sglang/sglang-router-disagg-dsv4-flash.yaml
