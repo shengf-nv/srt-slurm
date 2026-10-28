@@ -1,1 +1,7 @@
 uv run srtctl apply -f examples/sglang/sglang-router-disagg-dsv4-flash.yaml
+
+export work_dir=/home/ipp5_ncs_checkpoints/shengf
+srun -p gb200-blyris -n1 -t 04:00:00 \
+  --container-image $work_dir/container-caches/sglang-rtx/sglang-rtx.sqsh   \
+  --container-mounts $work_dir \
+  --pty /bin/bash -l

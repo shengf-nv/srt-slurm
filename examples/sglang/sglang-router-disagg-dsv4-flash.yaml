@@ -11,7 +11,7 @@ schema: 2
 name: "dsv4-flash-sglang-dynamo-disagg"
 
 slurm:
-  time_limit: "01:00:00"
+  time_limit: "99:00:00"
 
 model:
   path: "DeepSeek-V4-Flash"
@@ -20,6 +20,9 @@ model:
 
 resources:
   gpus_per_node: 8
+
+container_mounts:
+  /dev/infiniband: /dev/infiniband
 
 # dynamo.sglang needs blake3, which the container lacks (runs before the dynamo install).
 setup_script: "install-blake3.sh"
@@ -40,8 +43,8 @@ environment:
   SGLANG_SM120_FLASHMLA_BACKEND: "flashinfer"
   SGLANG_OPT_USE_TILELANG_INDEXER: "0"
   DG_ENABLE_DSV4_DENSE_LAYOUT_OVERRIDES: "1"
-  EP_DISABLE_GIN: "1"
-  NCCL_LSA_TEAM_SIZE: "4"
+  EP_DISABLE_GIN: "0"
+  NCCL_LSA_TEAM_SIZE: "1"
   SGLANG_DEEPEP_V2_NUM_MAX_DISPATCH_TOKENS_PER_RANK: "2048"
   SGLANG_DEEPEP_V2_NUM_SMS: "12"
   SGLANG_OPT_FIX_MEGA_MOE_MEMORY: "true"
@@ -52,16 +55,16 @@ environment:
 engine: sglang
 roles:
   prefill:
-    nodes: 14
-    workers: 14
-    gpus: 4
+    nodes: 6
+    workers: 6
+    gpus: 8
     args:
       served-model-name: "deepseek-ai/DeepSeek-V4-Flash"
       trust-remote-code: true
-      tensor-parallel-size: 4
-      data-parallel-size: 4
+      tensor-parallel-size: 8
+      data-parallel-size: 8
       enable-dp-attention: true
-      expert-parallel-size: 4
+      expert-parallel-size: 8
       pipeline-parallel-size: 1
       moe-runner-backend: "deep_gemm"
       chunked-prefill-size: 4096
@@ -75,16 +78,16 @@ roles:
       deepep-v2-mode: "direct"
       deepep-v2-dispatcher-output-dtype: "fp8"
   decode:
-    nodes: colocate
-    workers: 14
-    gpus: 4
+    nodes: 6
+    workers: 6
+    gpus: 8
     args:
       served-model-name: "deepseek-ai/DeepSeek-V4-Flash"
       trust-remote-code: true
-      tensor-parallel-size: 4
-      data-parallel-size: 4
+      tensor-parallel-size: 8
+      data-parallel-size: 8
       enable-dp-attention: true
-      expert-parallel-size: 4
+      expert-parallel-size: 8
       pipeline-parallel-size: 1
       moe-runner-backend: "deep_gemm"
       mem-fraction-static: 0.70
@@ -98,10 +101,16 @@ roles:
       deepep-v2-mode: "direct"
       deepep-v2-dispatcher-output-dtype: "fp8"
 
+# AgentX agentic trace replay (InferenceX srt_agentic.sh + AIPerf); see docs/benchmarks.md.
+# Needs network egress from the benchmark node (GitHub, pip, trace dataset).
 benchmark:
-  type: "sa-bench"
-  isl: 1024
-  osl: 1024
-  concurrencies: "1"
-  # DeepSeek-V4 ships no jinja chat_template; this adapter applies its own encoding.
-  custom_tokenizer: "sa_bench_tokenizers.sglang_deepseek_v4.SGLangDeepseekV4Tokenizer"
+  type: custom
+  command: /benchmarks/agentx.sh
+  env:
+    MODEL: "deepseek-ai/DeepSeek-V4-Flash"
+    MODEL_PREFIX: "dsv4"
+    FRAMEWORK: "sglang"
+    PRECISION: "fp4"
+    CONC: "1"
+    RESULT_FILENAME: "agentx_c100"
+    DURATION: "90000"

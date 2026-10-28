@@ -98,7 +98,7 @@ benchmark:
 ```
 
 The launcher checks these seven values before downloading anything. It clones InferenceX `main`
-and its AIPerf submodule into temporary storage, runs InferenceX's `srt_agentic.sh` against the
+into temporary storage, runs InferenceX's `srt_agentic.sh` against the
 ready srt-slurm frontend, and removes the checkout afterward. AIPerf artifacts and the aggregate
 JSON are written under `/logs/agentic` by default. The benchmark container needs network access
 to GitHub, package downloads, and the AgentX trace dataset. The launch log records the resolved
