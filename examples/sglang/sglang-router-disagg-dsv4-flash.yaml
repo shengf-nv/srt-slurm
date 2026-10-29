@@ -70,7 +70,7 @@ roles:
       chunked-prefill-size: 4096
       mem-fraction-static: 0.70
       disable-flashinfer-autotune: true
-      disable-radix-cache: true
+      disable-radix-cache: false
       skip-server-warmup: true
       dsa-paged-mqa-logits-backend: "deepgemm"
       enable-deepseek-v4-fp4-indexer: true
@@ -92,7 +92,7 @@ roles:
       moe-runner-backend: "deep_gemm"
       mem-fraction-static: 0.70
       disable-flashinfer-autotune: true
-      disable-radix-cache: true
+      disable-radix-cache: false
       skip-server-warmup: true
       cuda-graph-max-bs: 16
       dsa-paged-mqa-logits-backend: "deepgemm"
@@ -113,4 +113,4 @@ benchmark:
     PRECISION: "fp4"
     CONC: "1"
     RESULT_FILENAME: "agentx_c100"
-    DURATION: "90000"
+    DURATION: "2400"
