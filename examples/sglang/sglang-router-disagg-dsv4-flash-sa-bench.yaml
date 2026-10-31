@@ -51,12 +51,29 @@ environment:
   SGLANG_OPT_SWIGLU_CLAMP_FUSION: "true"
   SGLANG_OPT_USE_JIT_EP_ACTIVATION: "true"
   NCCL_CUMEM_ENABLE: "1"
+# PyTorch profiler (disabled: set type to "torch" to enable). Traces land in <run_dir>/logs/profiles/{prefill,decode}/.
+# Capture one process per phase (capture_scope: selected) to keep trace size manageable
+# across the 8x8-GPU prefill / 4x8-GPU decode workers.
+profiling:
+  type: "none"
+  prefill:
+    start_step: 5
+    stop_step: 15
+    capture_scope: selected
+    worker_index: 0
+    worker_rank: 0
+  decode:
+    start_step: 5
+    stop_step: 15
+    capture_scope: selected
+    worker_index: 0
+    worker_rank: 0
 
 engine: sglang
 roles:
   prefill:
-    nodes: 6
-    workers: 6
+    nodes: 8
+    workers: 8
     gpus: 8
     args:
       served-model-name: "deepseek-ai/DeepSeek-V4-Flash"
@@ -70,7 +87,7 @@ roles:
       chunked-prefill-size: 4096
       mem-fraction-static: 0.70
       disable-flashinfer-autotune: true
-      disable-radix-cache: true
+      disable-radix-cache: false
       skip-server-warmup: true
       dsa-paged-mqa-logits-backend: "deepgemm"
       enable-deepseek-v4-fp4-indexer: true
@@ -78,8 +95,8 @@ roles:
       deepep-v2-mode: "direct"
       deepep-v2-dispatcher-output-dtype: "fp8"
   decode:
-    nodes: 6
-    workers: 6
+    nodes: 4
+    workers: 4
     gpus: 8
     args:
       served-model-name: "deepseek-ai/DeepSeek-V4-Flash"
@@ -92,7 +109,7 @@ roles:
       moe-runner-backend: "deep_gemm"
       mem-fraction-static: 0.70
       disable-flashinfer-autotune: true
-      disable-radix-cache: true
+      disable-radix-cache: false
       skip-server-warmup: true
       cuda-graph-max-bs: 16
       dsa-paged-mqa-logits-backend: "deepgemm"
@@ -103,8 +120,8 @@ roles:
 
 benchmark:
   type: "sa-bench"
-  isl: 8096
-  osl: 8096
+  isl: 32768
+  osl: 1024
   concurrencies: "100"
   # DeepSeek-V4 ships no jinja chat_template; this adapter applies its own encoding.
   custom_tokenizer: "sa_bench_tokenizers.sglang_deepseek_v4.SGLangDeepseekV4Tokenizer"

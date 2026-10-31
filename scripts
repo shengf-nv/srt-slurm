@@ -1,4 +1,4 @@
-uv run srtctl apply -f examples/sglang/sglang-router-disagg-dsv4-flash.yaml
+uv run srtctl apply -f examples/sglang/sglang-router-disagg-dsv4-flash-sa-bench.yaml
 
 export work_dir=/home/ipp5_ncs_checkpoints/shengf
 srun -p gb200-blyris -n1 -t 04:00:00 \
